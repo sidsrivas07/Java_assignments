@@ -1,0 +1,379 @@
+// ques 1
+public class GenericSum {
+
+    // Generic method with bounded type parameter
+    public static <T extends Number> double sum(T[] array) {
+        double total = 0.0;
+        for (T element : array) {
+            total += element.doubleValue();
+        }
+        return total;
+    }
+
+    public static void main(String[] args) {
+        Integer[] intArray = {1, 2, 3, 4, 5};
+        Float[] floatArray = {1.5f, 2.5f, 3.5f, 4.5f};
+        Double[] doubleArray = {10.25, 20.75, 30.5, 40.0};
+
+        System.out.println("Sum of Integer array: " + sum(intArray));
+        System.out.println("Sum of Float array: " + sum(floatArray));
+        System.out.println("Sum of Double array: " + sum(doubleArray));
+    }
+}
+
+
+// ques 2
+import java.util.Optional;
+
+public class StudentEmailOptional {
+
+    public static void main(String[] args) {
+
+        // 1. Create an Optional containing an email address
+        Optional<String> emailOptional = Optional.of("student@example.com");
+
+        // 2. Create an empty Optional
+        Optional<String> emptyOptional = Optional.empty();
+
+        // 3. Display the email using ifPresent()
+        System.out.print("Email (using ifPresent): ");
+        emailOptional.ifPresent(System.out::println);
+
+        System.out.print("Empty Optional (using ifPresent): ");
+        emptyOptional.ifPresent(System.out::println);
+        System.out.println("(nothing printed, Optional is empty)");
+
+        // 4. Use orElse() to provide a default email address
+        String email1 = emailOptional.orElse("default@example.com");
+        String email2 = emptyOptional.orElse("default@example.com");
+        System.out.println("orElse with value present: " + email1);
+        System.out.println("orElse with empty Optional: " + email2);
+
+        // 5. Use orElseThrow() to handle a missing email value
+        try {
+            String email3 = emailOptional.orElseThrow(
+                    () -> new IllegalArgumentException("Email is missing!"));
+            System.out.println("orElseThrow with value present: " + email3);
+
+            String email4 = emptyOptional.orElseThrow(
+                    () -> new IllegalArgumentException("Email is missing!"));
+            System.out.println("orElseThrow with empty Optional: " + email4);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Exception caught: " + e.getMessage());
+        }
+    }
+}
+
+// ques 3
+
+import java.util.Objects;
+import java.util.Optional;
+
+class Result<T extends Number> {
+
+    private final String studentName;
+    private final T[] marks;
+    private final double maxMarksPerSubject;
+
+    public Result(String studentName, T[] marks, double maxMarksPerSubject) {
+        // 5. Validate required inputs using Objects.requireNonNull()
+        this.studentName = Objects.requireNonNull(studentName, "Student name must not be null");
+        this.marks = marks; // may be null/empty to demonstrate Optional handling
+        if (maxMarksPerSubject <= 0) {
+            throw new IllegalArgumentException("Max marks must be greater than zero");
+        }
+        this.maxMarksPerSubject = maxMarksPerSubject;
+    }
+
+    // 1 & 2. Calculate average using doubleValue()
+    public double calculateAverage() {
+        Objects.requireNonNull(marks, "Marks must not be null");
+        if (marks.length == 0) {
+            return 0.0;
+        }
+        double total = 0.0;
+        for (T mark : marks) {
+            total += Objects.requireNonNull(mark, "Individual mark must not be null").doubleValue();
+        }
+        return total / marks.length;
+    }
+
+    // 2. Calculate percentage
+    public double calculatePercentage() {
+        return (calculateAverage() / maxMarksPerSubject) * 100;
+    }
+
+    // 3. Determine pass/fail based on a threshold percentage
+    public boolean hasPassed(double thresholdPercentage) {
+        return calculatePercentage() >= thresholdPercentage;
+    }
+
+    // 4. Display result using Optional if marks are available
+    public void displayResult(double thresholdPercentage) {
+        Optional<T[]> marksOptional = Optional.ofNullable(marks)
+                .filter(m -> m.length > 0);
+
+        marksOptional.ifPresentOrElse(
+                m -> {
+                    System.out.println("Student    : " + studentName);
+                    System.out.print("Marks      : ");
+                    for (T mark : m) {
+                        System.out.print(mark + " ");
+                    }
+                    System.out.println();
+                    System.out.printf("Average    : %.2f%n", calculateAverage());
+                    System.out.printf("Percentage : %.2f%%%n", calculatePercentage());
+                    System.out.println("Status     : " + (hasPassed(thresholdPercentage) ? "PASS" : "FAIL"));
+                },
+                () -> {
+                    System.out.println("Student    : " + studentName);
+                    System.out.println("Marks are not available.");
+                }
+        );
+        System.out.println("-----------------------------------");
+    }
+}
+
+public class StudentResultDemo {
+
+    public static void main(String[] args) {
+        double threshold = 40.0;
+
+        // Integer marks
+        Integer[] intMarks = {78, 85, 90, 67, 72};
+        Result<Integer> r1 = new Result<>("Alice", intMarks, 100);
+        r1.displayResult(threshold);
+
+        // Double marks
+        Double[] doubleMarks = {35.5, 28.0, 41.5, 30.0};
+        Result<Double> r2 = new Result<>("Bob", doubleMarks, 100);
+        r2.displayResult(threshold);
+
+        // Float marks
+        Float[] floatMarks = {55.5f, 60.0f, 48.5f};
+        Result<Float> r3 = new Result<>("Charlie", floatMarks, 100);
+        r3.displayResult(threshold);
+
+        // Marks not available (null)
+        Result<Integer> r4 = new Result<>("Diana", null, 100);
+        r4.displayResult(threshold);
+
+        // requireNonNull validation: null student name
+        try {
+            new Result<Integer>(null, intMarks, 100);
+        } catch (NullPointerException e) {
+            System.out.println("Validation error: " + e.getMessage());
+        }
+    }
+}
+
+// ques 4
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Scanner;
+
+class Event {
+
+    private final String name;
+    private final LocalDate date;
+    private final LocalTime startTime;
+    private final Optional<String> venue;
+
+    public Event(String name, LocalDate date, LocalTime startTime, String venue) {
+        this.name = Objects.requireNonNull(name, "Event name must not be null");
+        this.date = Objects.requireNonNull(date, "Event date must not be null");
+        this.startTime = Objects.requireNonNull(startTime, "Start time must not be null");
+        // 6. Optional venue (empty/blank venue becomes Optional.empty())
+        this.venue = Optional.ofNullable(venue).filter(v -> !v.trim().isEmpty());
+    }
+
+    // 3. Check whether the event is in the future, today, or in the past
+    public String getDateStatus() {
+        LocalDate today = LocalDate.now();
+        if (date.isAfter(today)) {
+            return "Future event";
+        } else if (date.isEqual(today)) {
+            return "Event is today";
+        } else {
+            return "Past event";
+        }
+    }
+
+    // 4. Days remaining until the event
+    public long getDaysRemaining() {
+        return ChronoUnit.DAYS.between(LocalDate.now(), date);
+    }
+
+    // 5. End time if event lasts two hours
+    public LocalTime getEndTime() {
+        return startTime.plusHours(2);
+    }
+
+    // 2. Display event details
+    public void display() {
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd MMM yyyy (EEEE)");
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm a");
+
+        System.out.println("\n========== EVENT DETAILS ==========");
+        System.out.println("Event Name : " + name);
+        System.out.println("Date       : " + date.format(dateFmt));
+        System.out.println("Start Time : " + startTime.format(timeFmt));
+        System.out.println("End Time   : " + getEndTime().format(timeFmt) + " (2-hour duration)");
+        System.out.println("Venue      : " + venue.orElse("Venue not specified"));
+        System.out.println("Status     : " + getDateStatus());
+
+        long days = getDaysRemaining();
+        if (days > 0) {
+            System.out.println("Days Left  : " + days + " day(s)");
+        } else if (days == 0) {
+            System.out.println("Days Left  : 0 (happening today)");
+        } else {
+            System.out.println("Days Ago   : " + Math.abs(days) + " day(s)");
+        }
+        System.out.println("===================================");
+    }
+}
+
+public class EventManager {
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        try {
+            // 1. Accept event name, date, and start time
+            System.out.print("Enter event name: ");
+            String name = sc.nextLine();
+
+            System.out.print("Enter event date (yyyy-MM-dd): ");
+            LocalDate date = LocalDate.parse(sc.nextLine().trim());
+
+            System.out.print("Enter start time (HH:mm, 24-hour): ");
+            LocalTime time = LocalTime.parse(sc.nextLine().trim());
+
+            System.out.print("Enter venue (press Enter to skip): ");
+            String venue = sc.nextLine();
+
+            Event event = new Event(name, date, time, venue);
+            event.display();
+
+        } catch (DateTimeParseException e) {
+            System.out.println("Invalid date/time format: " + e.getMessage());
+        } finally {
+            sc.close();
+        }
+    }
+}
+
+// ques 5
+
+import java.util.Objects;
+import java.util.Optional;
+
+class GenericUtil {
+
+    // 1. Checks whether two objects are equal (null-safe)
+    public static <T> boolean isEqual(T a, T b) {
+        return Objects.equals(a, b);
+    }
+
+    // 2. Returns the contained value or a default
+    public static <T> T getDefault(Optional<T> value, T defaultValue) {
+        return value.orElse(defaultValue);
+    }
+
+    // 3. Returns the larger of two comparable objects
+    public static <T extends Comparable<T>> T max(T a, T b) {
+        return a.compareTo(b) >= 0 ? a : b;
+    }
+
+    // 4. Checks whether an object is null using the Objects class
+    public static boolean isNull(Object obj) {
+        return Objects.isNull(obj);
+    }
+}
+
+class Student implements Comparable<Student> {
+    private final String name;
+    private final int marks;
+
+    public Student(String name, int marks) {
+        this.name = name;
+        this.marks = marks;
+    }
+
+    @Override
+    public int compareTo(Student other) {
+        return Integer.compare(this.marks, other.marks);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Student)) return false;
+        Student s = (Student) o;
+        return marks == s.marks && Objects.equals(name, s.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, marks);
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + marks + ")";
+    }
+}
+
+public class GenericUtilityDemo {
+
+    public static void main(String[] args) {
+
+        // ---------- isEqual ----------
+        System.out.println("===== isEqual =====");
+        System.out.println("Strings   : " + GenericUtil.isEqual("Java", "Java"));
+        System.out.println("Strings   : " + GenericUtil.isEqual("Java", "Python"));
+        System.out.println("Integers  : " + GenericUtil.isEqual(10, 10));
+        System.out.println("Integers  : " + GenericUtil.isEqual(10, 20));
+        System.out.println("Null, Null: " + GenericUtil.isEqual(null, null));
+        System.out.println("Null, Obj : " + GenericUtil.isEqual(null, "Java"));
+        System.out.println("Students  : " + GenericUtil.isEqual(
+                new Student("Alice", 90), new Student("Alice", 90)));
+
+        // ---------- getDefault ----------
+        System.out.println("\n===== getDefault =====");
+        Optional<String> presentName = Optional.of("Alice");
+        Optional<String> emptyName = Optional.empty();
+        System.out.println("Present   : " + GenericUtil.getDefault(presentName, "Unknown"));
+        System.out.println("Empty     : " + GenericUtil.getDefault(emptyName, "Unknown"));
+
+        Optional<Integer> presentAge = Optional.of(25);
+        Optional<Integer> emptyAge = Optional.empty();
+        System.out.println("Present   : " + GenericUtil.getDefault(presentAge, 18));
+        System.out.println("Empty     : " + GenericUtil.getDefault(emptyAge, 18));
+
+        // ---------- max ----------
+        System.out.println("\n===== max =====");
+        System.out.println("Integers  : " + GenericUtil.max(45, 78));
+        System.out.println("Doubles   : " + GenericUtil.max(3.14, 2.71));
+        System.out.println("Strings   : " + GenericUtil.max("Apple", "Banana"));
+        System.out.println("Characters: " + GenericUtil.max('x', 'b'));
+        System.out.println("Students  : " + GenericUtil.max(
+                new Student("Alice", 85), new Student("Bob", 92)));
+
+        // ---------- isNull ----------
+        System.out.println("\n===== isNull =====");
+        String nullString = null;
+        Integer nullInteger = null;
+        System.out.println("Null String   : " + GenericUtil.isNull(nullString));
+        System.out.println("Null Integer  : " + GenericUtil.isNull(nullInteger));
+        System.out.println("Non-null Str  : " + GenericUtil.isNull("Hello"));
+        System.out.println("Non-null Obj  : " + GenericUtil.isNull(new Student("Carol", 70)));
+    }
+}

@@ -1,0 +1,153 @@
+import java.io.*;
+import java.util.*;
+
+class Employee implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private int id;
+    private String name;
+    private String department;
+    private double salary;
+
+    public Employee(int id, String name, String department, double salary) {
+        this.id = id;
+        this.name = name;
+        this.department = department;
+        this.salary = salary;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public String getDepartment() { return department; }
+    public double getSalary() { return salary; }
+
+    @Override
+    public String toString() {
+        return String.format("%-6d %-15s %-15s %-10.2f", id, name, department, salary);
+    }
+}
+
+public class EmployeeSerialization {
+
+    private static final String FILE_NAME = "employees.ser";
+
+    // Serialize list of employees
+    public static void serializeEmployees(List<Employee> employees) {
+        ObjectOutputStream oos = null;
+        try {
+            oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME));
+            oos.writeObject(employees);
+            System.out.println("Employee records serialized successfully to " + FILE_NAME);
+        } catch (IOException e) {
+            System.out.println("Error during serialization: " + e.getMessage());
+        } finally {
+            try {
+                if (oos != null) oos.close();
+            } catch (IOException e) {
+                System.out.println("Error closing output stream: " + e.getMessage());
+            }
+        }
+    }
+
+    // Deserialize list of employees 
+    @SuppressWarnings("unchecked")
+    public static List<Employee> deserializeEmployees() {
+        ObjectInputStream ois = null;
+        List<Employee> employees = new ArrayList<>();
+        try {
+            ois = new ObjectInputStream(new FileInputStream(FILE_NAME));
+            employees = (List<Employee>) ois.readObject();
+        } catch (FileNotFoundException e) {
+            System.out.println("No saved records found: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error during deserialization: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("Employee class not found: " + e.getMessage());
+        } finally {
+            try {
+                if (ois != null) ois.close();
+            } catch (IOException e) {
+                System.out.println("Error closing input stream: " + e.getMessage());
+            }
+        }
+        return employees;
+    }
+
+    // Display employees 
+    public static void displayEmployees(List<Employee> employees) {
+        if (employees.isEmpty()) {
+            System.out.println("No employee records to display.");
+            return;
+        }
+        System.out.println("\n---------------- Employee Records ----------------");
+        System.out.printf("%-6s %-15s %-15s %-10s%n", "ID", "Name", "Department", "Salary");
+        System.out.println("--------------------------------------------------");
+        for (Employee e : employees) {
+            System.out.println(e);
+        }
+    }
+
+   
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        List<Employee> employees = new ArrayList<>();
+        int choice = 0;
+
+        do {
+            System.out.println("\n===== Employee Record Manager =====");
+            System.out.println("1. Add Employee");
+            System.out.println("2. Save Employees (Serialize)");
+            System.out.println("3. Load & Display Employees (Deserialize)");
+            System.out.println("4. Exit");
+            System.out.print("Enter choice: ");
+
+            try {
+                choice = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Enter a number.");
+                continue;
+            }
+
+            switch (choice) {
+                case 1:
+                    try {
+                        System.out.print("Enter ID: ");
+                        int id = Integer.parseInt(sc.nextLine());
+                        System.out.print("Enter Name: ");
+                        String name = sc.nextLine();
+                        System.out.print("Enter Department: ");
+                        String dept = sc.nextLine();
+                        System.out.print("Enter Salary: ");
+                        double salary = Double.parseDouble(sc.nextLine());
+                        employees.add(new Employee(id, name, dept, salary));
+                        System.out.println("Employee added.");
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid number entered: " + e.getMessage());
+                    }
+                    break;
+
+                case 2:
+                    if (employees.isEmpty()) {
+                        System.out.println("No employees to save. Add some first.");
+                    } else {
+                        serializeEmployees(employees);
+                    }
+                    break;
+
+                case 3:
+                    List<Employee> loaded = deserializeEmployees();
+                    displayEmployees(loaded);
+                    break;
+
+                case 4:
+                    System.out.println("Exiting program...");
+                    break;
+
+                default:
+                    System.out.println("Invalid choice!");
+            }
+        } while (choice != 4);
+
+        sc.close();
+    }
+}

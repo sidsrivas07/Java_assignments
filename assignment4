@@ -1,0 +1,430 @@
+// ques 1
+import java.util.*;
+
+class Course {
+    private final String code;
+    private final String name;
+    private final int capacity;
+    private final Set<String> enrolledStudents = new HashSet<>();
+    private final List<String> prerequisites = new ArrayList<>();
+    private final LinkedList<String> waitlist = new LinkedList<>();
+
+    public Course(String code, String name, int capacity, List<String> prerequisites) {
+        this.code = code;
+        this.name = name;
+        this.capacity = capacity;
+        if (prerequisites != null) {
+            this.prerequisites.addAll(prerequisites);
+        }
+    }
+
+    public String getCode() { return code; }
+    public String getName() { return name; }
+    public int getCapacity() { return capacity; }
+    public Set<String> getEnrolledStudents() { return enrolledStudents; }
+    public List<String> getPrerequisites() { return prerequisites; }
+    public LinkedList<String> getWaitlist() { return waitlist; }
+
+    public boolean isFull() {
+        return enrolledStudents.size() >= capacity;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s (%s) | Enrolled: %d/%d | Waitlist: %d | Prereqs: %s",
+                code, name, enrolledStudents.size(), capacity, waitlist.size(), prerequisites);
+    }
+}
+
+class RegistrationPortal {
+    private final Map<String, Course> courses = new HashMap<>();
+    // Tracks completed courses per student for prerequisite checks
+    private final Map<String, Set<String>> completedCourses = new HashMap<>();
+
+    public void addCourse(Course course) {
+        courses.put(course.getCode(), course);
+    }
+
+    public Course getCourse(String code) {
+        return courses.get(code);
+    }
+
+    public void addCompletedCourse(String studentId, String courseCode) {
+        completedCourses.computeIfAbsent(studentId, k -> new HashSet<>()).add(courseCode);
+    }
+
+    private boolean hasPrerequisites(String studentId, Course course) {
+        Set<String> done = completedCourses.getOrDefault(studentId, Collections.emptySet());
+        for (String prereq : course.getPrerequisites()) {
+            if (!done.contains(prereq)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public String register(String studentId, String courseCode) {
+        Course course = courses.get(courseCode);
+        if (course == null) {
+            return "FAILED: Course " + courseCode + " not found.";
+        }
+        if (course.getEnrolledStudents().contains(studentId)) {
+            return "FAILED: " + studentId + " is already enrolled in " + courseCode + ".";
+        }
+        if (course.getWaitlist().contains(studentId)) {
+            return "FAILED: " + studentId + " is already on the waitlist for " + courseCode + ".";
+        }
+        if (!hasPrerequisites(studentId, course)) {
+            return "FAILED: " + studentId + " has not met prerequisites " + course.getPrerequisites() + ".";
+        }
+        if (!course.isFull()) {
+            course.getEnrolledStudents().add(studentId);
+            return "SUCCESS: " + studentId + " enrolled in " + courseCode + ".";
+        }
+        course.getWaitlist().addLast(studentId);
+        return "WAITLISTED: " + courseCode + " is full. " + studentId
+                + " is at position " + course.getWaitlist().size() + ".";
+    }
+
+    public String drop(String studentId, String courseCode) {
+        Course course = courses.get(courseCode);
+        if (course == null) {
+            return "FAILED: Course " + courseCode + " not found.";
+        }
+        if (course.getEnrolledStudents().remove(studentId)) {
+            String msg = "DROPPED: " + studentId + " dropped " + courseCode + ".";
+            String promoted = promoteFromWaitlist(course);
+            if (promoted != null) {
+                msg += " | PROMOTED: " + promoted + " moved from waitlist to enrolled.";
+            }
+            return msg;
+        }
+        if (course.getWaitlist().remove(studentId)) {
+            return "REMOVED: " + studentId + " removed from waitlist of " + courseCode + ".";
+        }
+        return "FAILED: " + studentId + " is not enrolled or waitlisted in " + courseCode + ".";
+    }
+
+    // Automated promotion: first-come, first-served
+    private String promoteFromWaitlist(Course course) {
+        while (!course.isFull() && !course.getWaitlist().isEmpty()) {
+            String next = course.getWaitlist().pollFirst();
+            if (hasPrerequisites(next, course)) {
+                course.getEnrolledStudents().add(next);
+                return next;
+            }
+        }
+        return null;
+    }
+
+    public void displayAll() {
+        for (Course c : courses.values()) {
+            System.out.println(c);
+        }
+    }
+}
+
+public class CourseRegistrationPortal {
+    public static void main(String[] args) {
+        RegistrationPortal portal = new RegistrationPortal();
+
+        portal.addCourse(new Course("CS101", "Intro to Programming", 2, null));
+        portal.addCourse(new Course("CS201", "Data Structures", 2, Arrays.asList("CS101")));
+        portal.addCourse(new Course("CS301", "Algorithms", 1, Arrays.asList("CS101", "CS201")));
+
+        portal.addCompletedCourse("S3", "CS101");
+        portal.addCompletedCourse("S4", "CS101");
+        portal.addCompletedCourse("S5", "CS101");
+        portal.addCompletedCourse("S5", "CS201");
+        portal.addCompletedCourse("S6", "CS101");
+        portal.addCompletedCourse("S6", "CS201");
+
+        System.out.println("--- Registrations ---");
+        System.out.println(portal.register("S1", "CS101"));
+        System.out.println(portal.register("S2", "CS101"));
+        System.out.println(portal.register("S3", "CS101")); // waitlisted
+        System.out.println(portal.register("S1", "CS101")); // duplicate
+        System.out.println(portal.register("S1", "CS201")); // prereq fail
+        System.out.println(portal.register("S3", "CS201"));
+        System.out.println(portal.register("S4", "CS201"));
+        System.out.println(portal.register("S5", "CS201")); // waitlisted
+        System.out.println(portal.register("S5", "CS301"));
+        System.out.println(portal.register("S6", "CS301")); // waitlisted
+        System.out.println(portal.register("S9", "CS999")); // not found
+
+        System.out.println("\n--- State ---");
+        portal.displayAll();
+
+        System.out.println("\n--- Drops & Promotion ---");
+        System.out.println(portal.drop("S1", "CS101"));  // S3 promoted
+        System.out.println(portal.drop("S5", "CS301"));  // S6 promoted
+        System.out.println(portal.drop("S6", "CS201"));  // not enrolled
+
+        System.out.println("\n--- Final State ---");
+        portal.displayAll();
+    }
+}
+
+// ques 2
+
+import java.util.*;
+
+class Song {
+    private final String id;
+    private final String title;
+    private final String artist;
+    private final int durationSec;
+
+    public Song(String id, String title, String artist, int durationSec) {
+        this.id = id;
+        this.title = title;
+        this.artist = artist;
+        this.durationSec = durationSec;
+    }
+
+    public String getId() { return id; }
+    public String getTitle() { return title; }
+    public String getArtist() { return artist; }
+    public int getDurationSec() { return durationSec; }
+
+    // Two songs are duplicates if they share the same id
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Song)) return false;
+        return id.equals(((Song) o).id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s - %s (%d:%02d)", title, artist, durationSec / 60, durationSec % 60);
+    }
+}
+
+class MediaPlayerQueue {
+    private static final int HISTORY_LIMIT = 5;
+
+    private final LinkedList<Song> queue = new LinkedList<>();
+    private final LinkedList<Song> history = new LinkedList<>();
+
+    // Cursor-based navigation: ListIterator avoids O(n) index lookups
+    private ListIterator<Song> cursor = queue.listIterator();
+    private Song current = null;
+    private boolean lastMovedForward = true;
+
+    // ---------- Queue building ----------
+
+    public void addToEnd(Song s) {
+        queue.addLast(s);
+        resetCursor();
+    }
+
+    // Priority queueing: add to the front
+    public void addToFront(Song s) {
+        queue.addFirst(s);
+        resetCursor();
+    }
+
+    // Insert at an arbitrary position using ListIterator (walks from nearest end)
+    public void insertAt(int position, Song s) {
+        if (position < 0 || position > queue.size()) {
+            System.out.println("Invalid position: " + position);
+            return;
+        }
+        ListIterator<Song> it = queue.listIterator(position);
+        it.add(s);
+        resetCursor();
+    }
+
+    // Play next: insert immediately after the currently playing song
+    public void playNext(Song s) {
+        if (current == null) {
+            addToFront(s);
+            return;
+        }
+        ListIterator<Song> it = queue.listIterator();
+        while (it.hasNext()) {
+            if (it.next().equals(current)) {
+                it.add(s);
+                break;
+            }
+        }
+        resetCursor();
+    }
+
+    // Remove duplicates in O(n) using a HashSet, keeping the first occurrence
+    public int removeDuplicates() {
+        Set<Song> seen = new HashSet<>();
+        int removed = 0;
+        Iterator<Song> it = queue.iterator();
+        while (it.hasNext()) {
+            if (!seen.add(it.next())) {
+                it.remove();
+                removed++;
+            }
+        }
+        resetCursor();
+        return removed;
+    }
+
+    public boolean remove(Song s) {
+        boolean removed = queue.remove(s);
+        resetCursor();
+        return removed;
+    }
+
+    // ---------- Playback / navigation ----------
+
+    public Song next() {
+        if (queue.isEmpty()) return null;
+
+        if (current == null) {
+            cursor = queue.listIterator();
+        } else if (!lastMovedForward && cursor.hasNext()) {
+            cursor.next(); // skip over the element returned by previous()
+        }
+
+        if (!cursor.hasNext()) {
+            System.out.println("[End of queue]");
+            return null;
+        }
+        return play(cursor.next(), true);
+    }
+
+    public Song previous() {
+        if (queue.isEmpty() || current == null) return null;
+
+        if (lastMovedForward && cursor.hasPrevious()) {
+            cursor.previous(); // skip over the element returned by next()
+        }
+
+        if (!cursor.hasPrevious()) {
+            System.out.println("[Start of queue]");
+            return null;
+        }
+        return play(cursor.previous(), false);
+    }
+
+    private Song play(Song s, boolean forward) {
+        if (current != null) {
+            addToHistory(current);
+        }
+        current = s;
+        lastMovedForward = forward;
+        return s;
+    }
+
+    // ---------- History ----------
+
+    private void addToHistory(Song s) {
+        history.addFirst(s);
+        if (history.size() > HISTORY_LIMIT) {
+            history.removeLast();
+        }
+    }
+
+    public void showHistory() {
+        System.out.println("Recently played (latest first):");
+        for (Song s : history) {
+            System.out.println("  " + s);
+        }
+    }
+
+    // ---------- Traversal ----------
+
+    public void showForward() {
+        System.out.println("Queue (forward):");
+        ListIterator<Song> it = queue.listIterator();
+        int i = 1;
+        while (it.hasNext()) {
+            System.out.println("  " + i++ + ". " + it.next());
+        }
+    }
+
+    public void showBackward() {
+        System.out.println("Queue (backward):");
+        ListIterator<Song> it = queue.listIterator(queue.size());
+        int i = queue.size();
+        while (it.hasPrevious()) {
+            System.out.println("  " + i-- + ". " + it.previous());
+        }
+    }
+
+    public Song getCurrent() { return current; }
+    public int size() { return queue.size(); }
+
+    // Re-sync the cursor to the current song after structural changes
+    private void resetCursor() {
+        cursor = queue.listIterator();
+        if (current == null) return;
+
+        while (cursor.hasNext()) {
+            if (cursor.next().equals(current)) {
+                lastMovedForward = true; // cursor now sits just after current
+                return;
+            }
+        }
+        // Current song was removed: restart from the beginning
+        current = null;
+        cursor = queue.listIterator();
+        lastMovedForward = true;
+    }
+}
+
+public class MediaPlayerDemo {
+    public static void main(String[] args) {
+        MediaPlayerQueue player = new MediaPlayerQueue();
+
+        Song s1 = new Song("1", "Blinding Lights", "The Weeknd", 200);
+        Song s2 = new Song("2", "Shape of You", "Ed Sheeran", 233);
+        Song s3 = new Song("3", "Levitating", "Dua Lipa", 203);
+        Song s4 = new Song("4", "Believer", "Imagine Dragons", 204);
+        Song s5 = new Song("5", "Stay", "Justin Bieber", 141);
+
+        player.addToEnd(s1);
+        player.addToEnd(s2);
+        player.addToEnd(s3);
+        player.addToEnd(s2); // duplicate
+        player.addToEnd(s1); // duplicate
+        player.addToEnd(s4);
+
+        System.out.println("--- Initial Queue ---");
+        player.showForward();
+
+        System.out.println("\n--- Priority add to front ---");
+        player.addToFront(s5);
+        player.showForward();
+
+        System.out.println("\n--- Insert at position 2 ---");
+        player.insertAt(2, new Song("6", "Peaches", "Justin Bieber", 198));
+        player.showForward();
+
+        System.out.println("\n--- Remove duplicates ---");
+        System.out.println("Removed: " + player.removeDuplicates());
+        player.showForward();
+
+        System.out.println("\n--- Backward traversal ---");
+        player.showBackward();
+
+        System.out.println("\n--- Playback navigation ---");
+        System.out.println("Next:     " + player.next());
+        System.out.println("Next:     " + player.next());
+        System.out.println("Next:     " + player.next());
+        System.out.println("Previous: " + player.previous());
+        System.out.println("Previous: " + player.previous());
+        System.out.println("Next:     " + player.next());
+
+        System.out.println("\n--- Play next ---");
+        player.playNext(new Song("7", "Industry Baby", "Lil Nas X", 212));
+        player.showForward();
+        System.out.println("Next:     " + player.next());
+
+        System.out.println("\n--- History ---");
+        player.showHistory();
+    }
+}

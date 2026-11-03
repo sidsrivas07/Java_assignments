@@ -1,0 +1,110 @@
+import java.io.*;
+import java.util.*;
+
+public class LogAnalyzer {
+
+    public static void analyzeLog(String inputFile, String outputFile) {
+        BufferedReader br = null;
+        BufferedWriter bw = null;
+
+        int totalEntries = 0;
+        int errorCount = 0;
+        int warningCount = 0;
+
+        try {
+            br = new BufferedReader(new FileReader(inputFile));
+            bw = new BufferedWriter(new FileWriter(outputFile));
+
+            String line;
+            bw.write("===== Filtered Log Entries (ERROR / WARNING) =====");
+            bw.newLine();
+
+            while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+
+                totalEntries++;
+                String upper = line.toUpperCase();
+
+                if (upper.contains("ERROR")) {
+                    errorCount++;
+                    bw.write(line);
+                    bw.newLine();
+                } else if (upper.contains("WARNING")) {
+                    warningCount++;
+                    bw.write(line);
+                    bw.newLine();
+                }
+            }
+
+            bw.newLine();
+            bw.write("===== Summary =====");
+            bw.newLine();
+            bw.write("Total log entries : " + totalEntries);
+            bw.newLine();
+            bw.write("ERROR entries     : " + errorCount);
+            bw.newLine();
+            bw.write("WARNING entries   : " + warningCount);
+            bw.newLine();
+
+            System.out.println("Analysis complete.");
+            System.out.println("Total log entries : " + totalEntries);
+            System.out.println("ERROR entries     : " + errorCount);
+            System.out.println("WARNING entries   : " + warningCount);
+            System.out.println("Filtered entries saved to: " + outputFile);
+
+        } catch (FileNotFoundException e) {
+            System.out.println("Log file not found: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("I/O error: " + e.getMessage());
+        } finally {
+            try {
+                if (br != null) br.close();
+            } catch (IOException e) {
+                System.out.println("Error closing reader: " + e.getMessage());
+            }
+            try {
+                if (bw != null) bw.close();
+            } catch (IOException e) {
+                System.out.println("Error closing writer: " + e.getMessage());
+            }
+        }
+    }
+
+    // Helper: creates a sample log file for testing
+    public static void createSampleLog(String fileName) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
+            bw.write("2026-11-03 10:00:01 INFO  Application started"); bw.newLine();
+            bw.write("2026-11-03 10:00:05 INFO  User login successful"); bw.newLine();
+            bw.write("2026-11-03 10:01:12 WARNING Disk usage at 85%"); bw.newLine();
+            bw.write("2026-11-03 10:02:30 ERROR Database connection failed"); bw.newLine();
+            bw.write("2026-11-03 10:03:45 INFO  Retrying connection"); bw.newLine();
+            bw.write("2026-11-03 10:04:10 ERROR Timeout while fetching data"); bw.newLine();
+            bw.write("2026-11-03 10:05:00 WARNING Memory usage high"); bw.newLine();
+            bw.write("2026-11-03 10:06:00 INFO  Application stopped"); bw.newLine();
+            System.out.println("Sample log file created: " + fileName);
+        } catch (IOException e) {
+            System.out.println("Could not create sample log: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Create a sample log file for testing? (y/n): ");
+        String ans = sc.nextLine();
+        String inputFile;
+
+        if (ans.equalsIgnoreCase("y")) {
+            inputFile = "application.log";
+            createSampleLog(inputFile);
+        } else {
+            System.out.print("Enter log file path: ");
+            inputFile = sc.nextLine();
+        }
+
+        String outputFile = "filtered_logs.txt";
+        analyzeLog(inputFile, outputFile);
+
+        sc.close();
+    }
+}

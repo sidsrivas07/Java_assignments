@@ -1,0 +1,129 @@
+abstract class FoodOrder {
+
+    private int orderId;
+    private String customerName;
+    private double amount;
+
+    static String restaurantName = "Food Express";
+    static int orderCount = 0;
+
+    FoodOrder(int orderId, String customerName, double amount) {
+        this.orderId = orderId;
+        this.customerName = customerName;
+        this.amount = amount;
+        orderCount++;
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    abstract double calculateDeliveryCharge();
+}
+
+
+interface Discountable {
+    double applyDiscount();
+}
+
+
+class RegularOrder extends FoodOrder implements Discountable {
+
+    RegularOrder(int id, String name, double amount) {
+        super(id, name, amount);
+    }
+
+    public double calculateDeliveryCharge() {
+        return 80;
+    }
+
+    public double applyDiscount() {
+        return getAmount() * 0.10;
+    }
+}
+
+
+class PremiumOrder extends FoodOrder implements Discountable {
+
+    PremiumOrder(int id, String name, double amount) {
+        super(id, name, amount);
+    }
+
+    public double calculateDeliveryCharge() {
+        return 50;
+    }
+
+    public double applyDiscount() {
+        return getAmount() * 0.15;
+    }
+}
+
+
+class OrderUtility {
+
+    static boolean validateAmount(double amount) {
+        return amount > 0;
+    }
+
+    static boolean validateCustomerName(String name) {
+        return name != null && !name.isEmpty();
+    }
+
+    static void showSummary(FoodOrder order) {
+
+        Discountable d = (Discountable) order;
+
+        double discount = d.applyDiscount();
+        double delivery = order.calculateDeliveryCharge();
+        double finalAmount = order.getAmount() - discount + delivery;
+
+        System.out.println("----------------------------");
+        System.out.println("Order ID      : " + order.getOrderId());
+        System.out.println("Customer      : " + order.getCustomerName());
+        System.out.println("Bill Amount   : Rs. " + order.getAmount());
+        System.out.println("Discount      : Rs. " + discount);
+        System.out.println("Delivery      : Rs. " + delivery);
+        System.out.println("Final Amount  : Rs. " + finalAmount);
+        System.out.println("----------------------------");
+    }
+}
+
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        FoodOrder[] orders = new FoodOrder[6];
+
+        orders[0] = new RegularOrder(101, "Rahul", 500);
+        orders[1] = new PremiumOrder(102, "Aman", 800);
+        orders[2] = new RegularOrder(103, "Priya", 600);
+        orders[3] = new PremiumOrder(104, "Neha", 1000);
+        orders[4] = new RegularOrder(105, "Karan", 750);
+        orders[5] = new PremiumOrder(106, "Riya", 1200);
+
+        System.out.println("Restaurant: " + FoodOrder.restaurantName);
+
+        for (FoodOrder order : orders) {
+
+            if (OrderUtility.validateAmount(order.getAmount())
+                    && OrderUtility.validateCustomerName(order.getCustomerName())) {
+
+                OrderUtility.showSummary(order);
+
+            } else {
+                System.out.println("Invalid Order");
+            }
+        }
+
+        System.out.println("Total Orders: " + FoodOrder.orderCount);
+    }
+}

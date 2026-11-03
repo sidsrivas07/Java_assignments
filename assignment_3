@@ -1,0 +1,530 @@
+// NAME     :    SIDDHANT SRIVASTAVA
+// ROLL NO  :    1024030892
+// BATCH    :    3C63
+// QUES 1   :    : Create a program that demonstrates the hierarchy of common exceptions such as ArithmeticException, NullPointerException, ArrayIndexOutOfBoundsException, and NumberFormatException.
+public class ExceptionHierarchyDemo {
+    public static void main(String[] args) {
+        System.out.println("--- Demonstrating Common Built-in Exceptions ---");
+
+        // 1. ArithmeticException
+        try {
+            int result = 10 / 0;
+        } catch (ArithmeticException e) {
+            System.out.println("Caught ArithmeticException: " + e.getMessage());
+        }
+
+        // 2. NullPointerException
+        try {
+            String str = null;
+            System.out.println(str.length());
+        } catch (NullPointerException e) {
+            System.out.println("Caught NullPointerException: " + e.getMessage());
+        }
+
+        // 3. ArrayIndexOutOfBoundsException
+        try {
+            int[] arr = new int[3];
+            int val = arr[5];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("Caught ArrayIndexOutOfBoundsException: " + e.getMessage());
+        }
+
+        // 4. NumberFormatException
+        try {
+            int num = Integer.parseInt("ABC");
+        } catch (NumberFormatException e) {
+            System.out.println("Caught NumberFormatException: " + e.getMessage());
+        }
+    }
+}
+
+// QUES 2    :   Write a program containing nested try-catch blocks. Generate different exceptions in the inner and outer blocks.
+
+public class NestedTryCatchDemo {
+    public static void main(String[] args) {
+        try {
+            System.out.println("Outer try block entered.");
+            
+            // Outer block operation
+            int[] numbers = {10, 20, 30};
+
+            try {
+                System.out.println("Inner try block entered.");
+                // Inner Exception 1: Division by zero
+                int result = numbers[1] / 0;
+            } catch (ArithmeticException e) {
+                System.out.println("Inner Catch: Cannot divide by zero -> " + e.getMessage());
+            }
+
+            try {
+                System.out.println("Second inner try block entered.");
+                // Inner Exception 2: Number format conversion error
+                int parsed = Integer.parseInt("InvalidNumber");
+            } catch (NumberFormatException e) {
+                System.out.println("Inner Catch: Invalid number format -> " + e.getMessage());
+            }
+
+            // Outer Exception: Accessing out-of-bounds array element
+            System.out.println("Accessing outer array element...");
+            int value = numbers[5];
+
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("Outer Catch: Array index out of range -> " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Outer Catch: General Exception -> " + e.getMessage());
+        } finally {
+            System.out.println("Outer finally block executed cleanly.");
+        }
+    }
+}
+
+// QUES 3   :   Develop a calculator that accepts two numbers and an operator (+, -, *, /). It should handle Division by zero, Invalid numeric input, and Invalid operators using separate exception handlers.
+
+import java.util.InputMismatchException;
+import java.util.Scanner;
+
+class InvalidOperatorException extends Exception {
+    public InvalidOperatorException(String message) {
+        super(message);
+    }
+}
+
+public class SafeCalculator {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            System.out.print("Enter first number: ");
+            double num1 = scanner.nextDouble();
+
+            System.out.print("Enter second number: ");
+            double num2 = scanner.nextDouble();
+
+            System.out.print("Enter an operator (+, -, *, /): ");
+            char operator = scanner.next().charAt(0);
+
+            double result = calculate(num1, num2, operator);
+            System.out.println("Result: " + result);
+
+        } catch (InputMismatchException e) {
+            System.out.println("Error: Invalid numeric input! Please enter valid numbers.");
+        } catch (ArithmeticException e) {
+            System.out.println("Error: " + e.getMessage());
+        } catch (InvalidOperatorException e) {
+            System.out.println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+        } finally {
+            scanner.close();
+        }
+    }
+
+    public static double calculate(double a, double b, char op) throws InvalidOperatorException, ArithmeticException {
+        switch (op) {
+            case '+': return a + b;
+            case '-': return a - b;
+            case '*': return a * b;
+            case '/':
+                if (b == 0) {
+                    throw new ArithmeticException("Division by zero is not allowed.");
+                }
+                return a / b;
+            default:
+                throw new InvalidOperatorException("Invalid operator '" + op + "'. Supported operators are +, -, *, /.");
+        }
+    }
+}
+
+
+// QUES 4:
+//Create a student result-processing program that accepts marks for several subjects (must be between 0 and 100).
+//Create a custom InvalidMarksException. Calculate total, percentage, and grade only when all input is valid.
+
+import java.util.Scanner;
+
+class InvalidMarksException extends Exception {
+    public InvalidMarksException(String message) {
+        super(message);
+    }
+}
+
+public class StudentResultProcessor {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            System.out.print("Enter number of subjects: ");
+            int numSubjects = scanner.nextInt();
+
+            if (numSubjects <= 0) {
+                throw new IllegalArgumentException("Number of subjects must be greater than zero.");
+            }
+
+            double[] marks = new double[numSubjects];
+            double total = 0;
+
+            for (int i = 0; i < numSubjects; i++) {
+                System.out.print("Enter marks for Subject " + (i + 1) + ": ");
+                double mark = scanner.nextDouble();
+
+                if (mark < 0 || mark > 100) {
+                    throw new InvalidMarksException("Invalid marks: " + mark + ". Marks must be between 0 and 100.");
+                }
+
+                marks[i] = mark;
+                total += mark;
+            }
+
+            double percentage = total / numSubjects;
+            char grade;
+
+            if (percentage >= 90) grade = 'A';
+            else if (percentage >= 75) grade = 'B';
+            else if (percentage >= 60) grade = 'C';
+            else if (percentage >= 40) grade = 'D';
+            else grade = 'F';
+
+            System.out.println("\n--- Student Result Summary ---");
+            System.out.println("Total Marks: " + total + " / " + (numSubjects * 100));
+            System.out.println("Percentage : " + String.format("%.2f", percentage) + "%");
+            System.out.println("Grade      : " + grade);
+
+        } catch (InvalidMarksException e) {
+            System.out.println("Result Calculation Aborted: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error: Invalid input encountered. " + e.getMessage());
+        } finally {
+            scanner.close();
+        }
+    }
+}
+
+
+// QUES 5   :   Implement a banking system supporting deposit and withdrawal with custom InsufficientBalanceException, InvalidAmountException, and AccountNotFoundException.
+//Demonstrate exception propagation and display account balance after successful transactions.
+
+import java.util.HashMap;
+import java.util.Map;
+
+class InsufficientBalanceException extends Exception {
+    public InsufficientBalanceException(String message) { super(message); }
+}
+
+class InvalidAmountException extends Exception {
+    public InvalidAmountException(String message) { super(message); }
+}
+
+class AccountNotFoundException extends Exception {
+    public AccountNotFoundException(String message) { super(message); }
+}
+
+class BankAccount {
+    private String accountNumber;
+    private double balance;
+
+    public BankAccount(String accountNumber, double initialBalance) {
+        this.accountNumber = accountNumber;
+        this.balance = initialBalance;
+    }
+
+    public String getAccountNumber() { return accountNumber; }
+    public double getBalance() { return balance; }
+
+    public void deposit(double amount) throws InvalidAmountException {
+        if (amount <= 0) {
+            throw new InvalidAmountException("Deposit amount must be greater than zero. Provided: " + amount);
+        }
+        balance += amount;
+        System.out.println("Successfully deposited $" + amount + ". New Balance: $" + balance);
+    }
+
+    public void withdraw(double amount) throws InvalidAmountException, InsufficientBalanceException {
+        if (amount <= 0) {
+            throw new InvalidAmountException("Withdrawal amount must be greater than zero. Provided: " + amount);
+        }
+        if (amount > balance) {
+            throw new InsufficientBalanceException("Insufficient balance! Requested: $" + amount + ", Available: $" + balance);
+        }
+        balance -= amount;
+        System.out.println("Successfully withdrew $" + amount + ". Remaining Balance: $" + balance);
+    }
+}
+
+class BankService {
+    private Map<String, BankAccount> accounts = new HashMap<>();
+
+    public void addAccount(BankAccount account) {
+        accounts.put(account.getAccountNumber(), account);
+    }
+
+    // Exception propagates from BankAccount -> BankService -> Main
+    public void processDeposit(String accNum, double amount) throws AccountNotFoundException, InvalidAmountException {
+        BankAccount acc = findAccount(accNum);
+        acc.deposit(amount);
+    }
+
+    public void processWithdrawal(String accNum, double amount) 
+            throws AccountNotFoundException, InvalidAmountException, InsufficientBalanceException {
+        BankAccount acc = findAccount(accNum);
+        acc.withdraw(amount);
+    }
+
+    private BankAccount findAccount(String accNum) throws AccountNotFoundException {
+        BankAccount acc = accounts.get(accNum);
+        if (acc == null) {
+            throw new AccountNotFoundException("Account number '" + accNum + "' not found.");
+        }
+        return acc;
+    }
+}
+
+public class BankApplicationDemo {
+    public static void main(String[] args) {
+        BankService bank = new BankService();
+        bank.addAccount(new BankAccount("ACC1001", 500.00));
+
+        // Test 1: Successful Operations
+        try {
+            System.out.println("--- Test 1: Deposit & Withdrawal ---");
+            bank.processDeposit("ACC1001", 200.00);
+            bank.processWithdrawal("ACC1001", 150.00);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+
+        // Test 2: Insufficient Balance Exception
+        try {
+            System.out.println("\n--- Test 2: Overdrawing Balance ---");
+            bank.processWithdrawal("ACC1001", 1000.00);
+        } catch (Exception e) {
+            System.out.println("Caught Exception: " + e.getMessage());
+        }
+
+        // Test 3: Account Not Found Exception
+        try {
+            System.out.println("\n--- Test 3: Invalid Account Number ---");
+            bank.processDeposit("ACC9999", 50.00);
+        } catch (Exception e) {
+            System.out.println("Caught Exception: " + e.getMessage());
+        }
+    }
+}
+
+// QUES 6 : Develop a login system with custom exceptions: InvalidUsernameException, InvalidPasswordException, and AccountLockedException. Allow a fixed number of failed attempts before locking the account.
+
+import java.util.Scanner;
+
+class InvalidUsernameException extends Exception {
+    public InvalidUsernameException(String message) { super(message); }
+}
+
+class InvalidPasswordException extends Exception {
+    public InvalidPasswordException(String message) { super(message); }
+}
+
+class AccountLockedException extends Exception {
+    public AccountLockedException(String message) { super(message); }
+}
+
+public class LoginSystem {
+    private static final String CORRECT_USERNAME = "admin";
+    private static final String CORRECT_PASSWORD = "Password123";
+    private static final int MAX_ATTEMPTS = 3;
+
+    private int failedAttempts = 0;
+    private boolean isLocked = false;
+
+    public void login(String username, String password) 
+            throws AccountLockedException, InvalidUsernameException, InvalidPasswordException {
+        
+        if (isLocked) {
+            throw new AccountLockedException("Account is LOCKED due to multiple failed login attempts.");
+        }
+
+        if (!CORRECT_USERNAME.equals(username)) {
+            failedAttempts++;
+            checkLockStatus();
+            throw new InvalidUsernameException("Invalid username provided.");
+        }
+
+        if (!CORRECT_PASSWORD.equals(password)) {
+            failedAttempts++;
+            checkLockStatus();
+            throw new InvalidPasswordException("Incorrect password. Attempts left: " + (MAX_ATTEMPTS - failedAttempts));
+        }
+
+        // Reset failed attempts on successful login
+        failedAttempts = 0;
+        System.out.println("Login successful! Welcome, " + username + ".");
+    }
+
+    private void checkLockStatus() throws AccountLockedException {
+        if (failedAttempts >= MAX_ATTEMPTS) {
+            isLocked = true;
+            throw new AccountLockedException("Maximum login attempts exceeded. Account is now LOCKED.");
+        }
+    }
+
+    public static void main(String[] args) {
+        LoginSystem loginSystem = new LoginSystem();
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.print("\nEnter Username: ");
+            String username = scanner.nextLine();
+
+            System.out.print("Enter Password: ");
+            String password = scanner.nextLine();
+
+            try {
+                loginSystem.login(username, password);
+                break; // Exit loop on success
+            } catch (InvalidUsernameException | InvalidPasswordException e) {
+                System.out.println("Login Failed: " + e.getMessage());
+            } catch (AccountLockedException e) {
+                System.out.println("CRITICAL: " + e.getMessage());
+                break; // Exit loop on lock out
+            } finally {
+                System.out.println("[Audit Log]: Login attempt evaluated at system timestamp.");
+            }
+        }
+
+        scanner.close();
+    }
+}
+
+// QUES 7   
+
+import java.util.ArrayList;
+import java.util.List;
+
+// --- Hierarchy Definitions ---
+class ApplicationException extends Exception {
+    public ApplicationException(String message) { super(message); }
+}
+
+// Product Exceptions
+class ProductException extends ApplicationException {
+    public ProductException(String message) { super(message); }
+}
+class ProductNotFoundException extends ProductException {
+    public ProductNotFoundException(String message) { super(message); }
+}
+class OutOfStockException extends ProductException {
+    public OutOfStockException(String message) { super(message); }
+}
+
+// Payment Exceptions
+class PaymentException extends ApplicationException {
+    public PaymentException(String message) { super(message); }
+}
+class InvalidPaymentException extends PaymentException {
+    public InvalidPaymentException(String message) { super(message); }
+}
+class InsufficientFundsException extends PaymentException {
+    public InsufficientFundsException(String message) { super(message); }
+}
+
+// Order Exceptions
+class OrderException extends ApplicationException {
+    public OrderException(String message) { super(message); }
+}
+class EmptyCartException extends OrderException {
+    public EmptyCartException(String message) { super(message); }
+}
+
+// --- Domain Models & Business Logic ---
+class Product {
+    private String id;
+    private String name;
+    private double price;
+    private int stockQuantity;
+
+    public Product(String id, String name, double price, int stockQuantity) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stockQuantity = stockQuantity;
+    }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+    public int getStockQuantity() { return stockQuantity; }
+    public void reduceStock(int qty) { this.stockQuantity -= qty; }
+}
+
+class ShoppingCart {
+    private List<Product> items = new ArrayList<>();
+
+    public void addItem(Product product, int quantity) throws OutOfStockException {
+        if (product.getStockQuantity() < quantity) {
+            throw new OutOfStockException("Product '" + product.getName() + "' is out of stock. Available: " + product.getStockQuantity());
+        }
+        for (int i = 0; i < quantity; i++) {
+            items.add(product);
+        }
+        product.reduceStock(quantity);
+        System.out.println("Added " + quantity + "x " + product.getName() + " to cart.");
+    }
+
+    public double calculateTotal() throws EmptyCartException {
+        if (items.isEmpty()) {
+            throw new EmptyCartException("Cannot calculate total: Cart is empty.");
+        }
+        double total = 0;
+        for (Product item : items) {
+            total += item.getPrice();
+        }
+        return total;
+    }
+
+    public void checkout(double paymentAmount) throws ApplicationException {
+        double total = calculateTotal(); // May throw EmptyCartException
+
+        if (paymentAmount <= 0) {
+            throw new InvalidPaymentException("Payment amount must be greater than 0.");
+        }
+        if (paymentAmount < total) {
+            throw new InsufficientFundsException("Insufficient funds. Total: $" + total + ", Provided: $" + paymentAmount);
+        }
+
+        System.out.println("Payment of $" + paymentAmount + " processed successfully. Order completed!");
+        items.clear();
+    }
+}
+
+public class ShoppingCartDemo {
+    public static void main(String[] args) {
+        Product laptop = new Product("P101", "Laptop", 1200.00, 2);
+        ShoppingCart cart = new ShoppingCart();
+
+        // Scenario 1: Empty Cart Checkout
+        try {
+            System.out.println("--- Test 1: Checkout Empty Cart ---");
+            cart.checkout(1500.00);
+        } catch (ApplicationException e) {
+            System.out.println("Caught ApplicationException: " + e.getMessage());
+        }
+
+        // Scenario 2: Adding Items & Successful Checkout
+        try {
+            System.out.println("\n--- Test 2: Successful Purchase ---");
+            cart.addItem(laptop, 1);
+            cart.checkout(1200.00);
+        } catch (ApplicationException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+
+        // Scenario 3: Out of Stock
+        try {
+            System.out.println("\n--- Test 3: Out of Stock Request ---");
+            cart.addItem(laptop, 5);
+        } catch (ProductException e) {
+            System.out.println("Caught ProductException: " + e.getMessage());
+        } catch (ApplicationException e) {
+            System.out.println("Caught General Application Exception: " + e.getMessage());
+        }
+    }
+}
+

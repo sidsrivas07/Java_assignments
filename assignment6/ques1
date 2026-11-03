@@ -1,0 +1,154 @@
+import java.io.*;
+import java.util.*;
+
+public class StudentFileManager {
+
+    // Byte stream: copy any binary file
+    public static void copyBinaryFile(String source, String destination) {
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        try {
+            fis = new FileInputStream(source);
+            fos = new FileOutputStream(destination);
+
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                fos.write(buffer, 0, bytesRead);
+            }
+            System.out.println("Binary file copied successfully: " + source + " -> " + destination);
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("I/O error while copying: " + e.getMessage());
+        } finally {
+            try {
+                if (fis != null) fis.close();
+            } catch (IOException e) {
+                System.out.println("Error closing input stream: " + e.getMessage());
+            }
+            try {
+                if (fos != null) fos.close();
+            } catch (IOException e) {
+                System.out.println("Error closing output stream: " + e.getMessage());
+            }
+        }
+    }
+
+    // Character stream: write student record
+    public static void writeStudent(String fileName, int id, String name, String course, double marks) {
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(fileName, true);
+            fw.write(id + "," + name + "," + course + "," + marks + "\n");
+            System.out.println("Student record saved.");
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        } finally {
+            try {
+                if (fw != null) fw.close();
+            } catch (IOException e) {
+                System.out.println("Error closing writer: " + e.getMessage());
+            }
+        }
+    }
+
+    // ---------- Character stream: read and display student records ----------
+    public static void readStudents(String fileName) {
+        FileReader fr = null;
+        try {
+            fr = new FileReader(fileName);
+            StringBuilder sb = new StringBuilder();
+            int ch;
+            while ((ch = fr.read()) != -1) {
+                sb.append((char) ch);
+            }
+
+            System.out.println("\n--------- Student Records ---------");
+            System.out.printf("%-6s %-15s %-12s %-8s%n", "ID", "Name", "Course", "Marks");
+            System.out.println("-----------------------------------");
+
+            String[] lines = sb.toString().split("\n");
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
+                String[] p = line.split(",");
+                if (p.length == 4) {
+                    System.out.printf("%-6s %-15s %-12s %-8s%n", p[0], p[1], p[2], p[3]);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Student file not found: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+        } finally {
+            try {
+                if (fr != null) fr.close();
+            } catch (IOException e) {
+                System.out.println("Error closing reader: " + e.getMessage());
+            }
+        }
+    }
+
+    // ---------- Main ----------
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String studentFile = "students.txt";
+        int choice;
+
+        do {
+            System.out.println("\n===== Student Record Manager =====");
+            System.out.println("1. Add Student Record");
+            System.out.println("2. Display All Records");
+            System.out.println("3. Copy Binary File");
+            System.out.println("4. Exit");
+            System.out.print("Enter choice: ");
+
+            try {
+                choice = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Enter a number.");
+                choice = 0;
+                continue;
+            }
+
+            switch (choice) {
+                case 1:
+                    try {
+                        System.out.print("Enter ID: ");
+                        int id = Integer.parseInt(sc.nextLine());
+                        System.out.print("Enter Name: ");
+                        String name = sc.nextLine();
+                        System.out.print("Enter Course: ");
+                        String course = sc.nextLine();
+                        System.out.print("Enter Marks: ");
+                        double marks = Double.parseDouble(sc.nextLine());
+                        writeStudent(studentFile, id, name, course, marks);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid number entered: " + e.getMessage());
+                    }
+                    break;
+
+                case 2:
+                    readStudents(studentFile);
+                    break;
+
+                case 3:
+                    System.out.print("Enter source file path: ");
+                    String src = sc.nextLine();
+                    System.out.print("Enter destination file path: ");
+                    String dest = sc.nextLine();
+                    copyBinaryFile(src, dest);
+                    break;
+
+                case 4:
+                    System.out.println("Exiting program...");
+                    break;
+
+                default:
+                    System.out.println("Invalid choice!");
+            }
+        } while (choice != 4);
+
+        sc.close();
+    }
+}

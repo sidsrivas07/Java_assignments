@@ -1,0 +1,190 @@
+// NAME     :    SIDDHANT SRIVASTAVA
+// ROLL NO  :    1024030892
+// BATCH    :    3C63
+// COURSE   :    UCS553: Enterprise Web Application
+// LAB EXPERIMENT 1 – Basic Programming Using JAVA
+
+import java.util.Scanner;
+
+// ============================================================================
+// 1. Write Java Program to Check Leap Year
+// ============================================================================
+class LeapYear {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a year: ");
+        int year = sc.nextInt();
+        if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0))
+            System.out.println(year + " is a Leap Year.");
+        else
+            System.out.println(year + " is not a Leap Year.");
+    }
+}
+
+// ============================================================================
+// 2. Write Java Program to Check Whether a Character is Alphabet or Not
+// ============================================================================
+class AlphabetCheck {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a character: ");
+        char ch = sc.next().charAt(0);
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))
+            System.out.println(ch + " is an Alphabet.");
+        else
+            System.out.println(ch + " is not an Alphabet.");
+    }
+}
+
+// ============================================================================
+// 3. Write Java Program to Find Factorial of a Number
+// ============================================================================
+class Factorial {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a number: ");
+        int n = sc.nextInt();
+        long fact = 1;
+        for (int i = 1; i <= n; i++)
+            fact = fact * i;
+        System.out.println("Factorial = " + fact);
+    }
+}
+
+// ============================================================================
+// 4. Write Java Program to Display Fibonacci Series
+// ============================================================================
+class Fibonacci {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter number of terms: ");
+        int n = sc.nextInt();
+        int a = 0, b = 1;
+        System.out.print("Fibonacci Series: ");
+        for (int i = 1; i <= n; i++) {
+            System.out.print(a + " ");
+            int c = a + b;
+            a = b;
+            b = c;
+        }
+        System.out.println();
+    }
+}
+
+// ============================================================================
+// 5. Write Java Program to Find GCD of two Numbers
+// ============================================================================
+class GCD {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter first number: ");
+        int a = sc.nextInt();
+        System.out.print("Enter second number: ");
+        int b = sc.nextInt();
+        while (b != 0) {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        System.out.println("GCD = " + a);
+    }
+}
+
+// ============================================================================
+// 6. Write Java Program to Find LCM of two Numbers
+// ============================================================================
+class LCM {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter first number: ");
+        int a = sc.nextInt();
+        System.out.print("Enter second number: ");
+        int b = sc.nextInt();
+        int x = a, y = b;
+        while (y != 0) {
+            int temp = y;
+            y = x % y;
+            x = temp;
+        }
+        long lcm = (long) a * b / x;
+        System.out.println("LCM = " + lcm);
+    }
+}
+
+// ============================================================================
+// 7. Write Java Program to Count Number of Digits in an Integer
+// ============================================================================
+class CountDigits {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a number: ");
+        int n = sc.nextInt();
+        int count = 0;
+        if (n == 0) {
+            count = 1;
+        } else {
+            n = Math.abs(n);
+            while (n > 0) {
+                n = n / 10;
+                count++;
+            }
+        }
+        System.out.println("Number of digits = " + count);
+    }
+}
+
+// ============================================================================
+// 8. Write Java Program to Reverse a Number
+// ============================================================================
+class ReverseNumber {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a number: ");
+        int n = sc.nextInt();
+        int rev = 0;
+        while (n != 0) {
+            int digit = n % 10;
+            rev = rev * 10 + digit;
+            n = n / 10;
+        }
+        System.out.println("Reversed Number = " + rev);
+    }
+}
+
+// ============================================================================
+// 9. Write Java Program to Calculate the Power of a Number
+// ============================================================================
+class PowerCalculator {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter base: ");
+        int base = sc.nextInt();
+        System.out.print("Enter exponent: ");
+        int exp = sc.nextInt();
+        long result = 1;
+        for (int i = 1; i <= exp; i++)
+            result = result * base;
+        System.out.println("Result = " + result);
+    }
+}
+
+// ============================================================================
+// 10. Write Java Program to Check Palindrome
+// ============================================================================
+class PalindromeCheck {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a number: ");
+        int n = sc.nextInt();
+        int original = n, rev = 0;
+        while (n != 0) {
+            int digit = n % 10;
+            rev = rev * 10 + digit;
+            n = n / 10;
+        }
+        if (original == rev)
+            System.out.println(original + " is a Palindrome.");
+        else
+            System.out.println(original + " is not a Palindrome.");
+    }
+}
